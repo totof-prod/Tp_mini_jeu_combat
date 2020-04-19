@@ -1,0 +1,10 @@
+.character_info{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+.character{
+    border: black solid 2px;
+    padding: 1em;
+    border-radius: 10px;
+}
