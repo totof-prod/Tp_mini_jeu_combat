@@ -6,65 +6,83 @@ class CharacterManager extends Manager
 private $_db;
 
 
-
     public function __construct($db)
     {
         $this->setdb($db);
     }
-    public function add(Character $perso)
+
+
+
+    public function add(Character $character)
     {
-        $q = $this->_db->prepare('INSERT INTO Characters(name, strongCharacter, damages, level, experience) VALUES(:name, :strongCharacter, :damages, :level, :experience)');
-
-        $q->bindValue(':name', $perso->getName());
-        $q->bindValue(':strongCharacter', $perso->getStrongCharacter(), PDO::PARAM_INT);
-        $q->bindValue(':damages', $perso->getDamages(), PDO::PARAM_INT);
-        $q->bindValue(':level', $perso->getLevel(), PDO::PARAM_INT);
-        $q->bindValue(':experience', $perso->getExperience(), PDO::PARAM_INT);
-
+        $q = $this->_db->prepare('INSERT INTO Characters(name) VALUES(:name)');
+        $q->bindValue(':name', $character->getName());
         $q->execute();
+
+        $character->hydrate([
+            'id' => $this->_db->lastInsertId(),
+            'degats' => 0,
+        ]);
+    }
+    public function count(){
+        return $this->_db->query('SELECT COUNT(*) FROM Characters')->fetchColumn();
     }
 
-    public function delete(Character $perso)
+    public function delete(Character $character)
     {
-        $this->_db->exec('DELETE FROM Characters WHERE id = '.$perso->getid());
+        $this->_db->exec('DELETE FROM Characters WHERE id = '.$character->getid());
+    }
+    public function exists($info){
+
+        if (is_int($info))
+        {
+            return (bool) $this->_db->query('SELECT COUNT(*) FROM Characters WHERE id = '.$info)->fetchColumn();
+        }
+        $q = $this->_db->prepare('SELECT COUNT(*) FROM Characters WHERE name = :name');
+        $q->execute([':name' => $info]);
+
+        return (bool) $q->fetchColumn();
     }
 
-    public function get($id)
+    public function get($info)
     {
-        $id = (int) $id;
+        if (is_int($info))
+        {
+            $q = $this->_db->query('SELECT id, name, damages FROM Characters WHERE id = '.$info);
+            $donnees = $q->fetch(PDO::FETCH_ASSOC);
 
-        $q = $this->_db->query('SELECT id, id, name, strongcharacter, damages, level, experience FROM Characters WHERE id = '.$id);
-        $data = $q->fetch(PDO::FETCH_ASSOC);
+            return new Character($donnees);
+        }
+        else
+        {
+            $q = $this->_db->prepare('SELECT id, name, damages FROM Characters WHERE name = :name');
+            $q->execute([':name' => $info]);
 
-        return new Character($data);
+            return new Character($q->fetch(PDO::FETCH_ASSOC));
+        }
     }
 
     public function getList()
     {
-        $persos = [];
+        $character = [];
 
-        $q = $this->_db->query('SELECT id, name, strongCharacter, damages, level, experience FROM Characters ORDER BY name');
+        $q = $this->_db->query('SELECT id, name, damages FROM Characters  ORDER BY name');
 
         while ($data = $q->fetch(PDO::FETCH_ASSOC))
         {
-            $persos[] = new Character($data);
-
+            $character[] = new Character($data);
         }
-        return $persos;
+
+        return $character;
 
 
     }
 
-    public function update(Character $perso)
+    public function update(Character $character)
     {
-        $q = $this->_db->prepare('UPDATE Characters SET strongCharacter = :strongCharacter, damages = :damages, level = :level, experience = :experience WHERE id = :id');
-
-        $q->bindValue(':strongCharacter', $perso->getstrongCharacter(), PDO::PARAM_INT);
-        $q->bindValue(':damages', $perso->getdamages(), PDO::PARAM_INT);
-        $q->bindValue(':level', $perso->getlevel(), PDO::PARAM_INT);
-        $q->bindValue(':experience', $perso->getexperience(), PDO::PARAM_INT);
-        $q->bindValue(':id', $perso->getid(), PDO::PARAM_INT);
-
+        $q = $this->_db->prepare('UPDATE Characters SET damages = :damages WHERE id = :id');
+        $q->bindValue(':damages', $character->getdamages(), PDO::PARAM_INT);
+        $q->bindValue(':id', $character->getid(), PDO::PARAM_INT);
         $q->execute();
     }
 

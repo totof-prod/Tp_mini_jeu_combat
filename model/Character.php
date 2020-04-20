@@ -12,14 +12,13 @@ class Character
     private $_level;
     private $_experience;
 
-    public function __construct($data)
+    const ITS_ME = 1;
+    const CHARACTER_DIE = 2;
+    const CHARACTER_HIT = 3;
+
+    public function __construct(array $data)
     {
-        $this->setId($data['id']);
-        $this->setName($data['name']);
-        $this->setStrongCharacter($data['strongCharacter']);
-        $this->setDamages($data['damages']);
-        $this->setLevel($data['level']);
-        $this->setExperience($data['experience']);
+        $this->hydrate($data);
     }
 
     public function hydrate(array $data)
@@ -89,6 +88,30 @@ class Character
         if($level >= 1 && $level <=100){
             $this->_level = $level;
         }
+    }
+
+    public function hit (Character $character){
+        if ($character->getid() == $this->_id)
+        {
+            return self::ITS_ME;
+        }
+
+        return $character->receiveDamages();
+    }
+
+
+    public function receiveDamages(){
+        $this->_damages += 5 ;
+
+        if($this->_damages >= 100){
+            return self::CHARACTER_DIE;
+        }
+        return self::CHARACTER_HIT;
+
+    }
+    public function nameTrue()
+    {
+        return !empty($this->_name);
     }
 
 
