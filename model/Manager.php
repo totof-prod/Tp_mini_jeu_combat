@@ -2,10 +2,16 @@
 
 
 class Manager
+
 {
   public function dbConnect(){
+    $dbConfig =  require_once __DIR__.'../../config/database.php';
 
-        return new PDO('mysql:host=localhost:8889;dbname=TP_fight;charset=utf8', 'root', 'root');
+      static $db;
+      if(is_null($db)){
+          $db = new PDO($dbConfig['dsn'].';dbname='.$dbConfig['dbname'].';charset=utf8', $dbConfig['user'], $dbConfig['password']);
 
+      }
+      return $db;
     }
 }
